@@ -73,7 +73,7 @@ export function CartDrawer() {
                 >
                   <div className="relative w-20 h-20 rounded-md overflow-hidden bg-card shrink-0">
                     <Image
-                      src={getProductImage(item.product.slug) || "/placeholder.svg"}
+                      src={(item.product as any).imageUrl || (item.product as any).image || getProductImage(item.product.slug) || "/placeholder.svg"}
                       alt={item.product.name}
                       fill
                       className="object-cover"

@@ -69,7 +69,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
           <div className="relative">
             <div className="aspect-square rounded-2xl overflow-hidden bg-muted sticky top-24">
               <Image
-                src={(product as any).imageUrl || getProductImage(product.slug) || "/placeholder.svg"}
+                src={product.imageUrl || product.image || getProductImage(product.slug) || "/placeholder.svg"}
                 alt={product.name}
                 fill
                 className="object-cover"

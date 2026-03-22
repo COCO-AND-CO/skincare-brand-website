@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Package, Users, ShoppingCart, BarChart3, LogOut, SlidersHorizontal } from "lucide-react";
+import { Package, Users, ShoppingCart, BarChart3, LogOut, SlidersHorizontal, HelpCircle, Star } from "lucide-react";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -9,7 +9,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="h-16 flex items-center px-6 border-b">
           <span className="font-bold text-lg tracking-tight">Admin Console</span>
         </div>
-        <nav className="flex-1 p-4 space-y-1">
+        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
           <Link href="/admin" className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md hover:bg-gray-100/50 text-gray-700">
             <BarChart3 className="h-4 w-4" />
             Dashboard (Revenue)
@@ -25,6 +25,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <Link href="/admin/filters" className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md hover:bg-gray-100/50 text-gray-700">
             <SlidersHorizontal className="h-4 w-4" />
             Category Filters
+          </Link>
+          <Link href="/admin/faqs" className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md hover:bg-gray-100/50 text-gray-700">
+            <HelpCircle className="h-4 w-4" />
+            FAQs
+          </Link>
+          <Link href="/admin/testimonials" className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md hover:bg-gray-100/50 text-gray-700">
+            <Star className="h-4 w-4" />
+            Testimonials
           </Link>
           <Link href="/admin/users" className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md hover:bg-gray-100/50 text-gray-700">
             <Users className="h-4 w-4" />

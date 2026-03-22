@@ -67,7 +67,7 @@ export function Footer() {
             </p>
             <div className="flex gap-4 mt-6">
               <a
-                href="https://instagram.com/cocoandco"
+                href="https://www.instagram.com/cocoandco_organics?igsh=MXAxcHlpejdvbW9xNA=="
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:text-accent transition-colors"
@@ -76,7 +76,7 @@ export function Footer() {
                 <Instagram className="h-5 w-5" />
               </a>
               <a
-                href="https://facebook.com/cocoandco"
+                href="https://facebook.com/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:text-accent transition-colors"

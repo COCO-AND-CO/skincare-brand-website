@@ -32,7 +32,7 @@ export function ProductCard({ product, featured = false }: ProductCardProps) {
       {/* Image */}
       <Link href={`/shop/${(product as any).id || product.slug}`} className="block relative aspect-square overflow-hidden bg-muted">
         <Image
-          src={(product as any).imageUrl || getProductImage(product.slug) || "/placeholder.svg"}
+          src={(product as any).imageUrl || product.image || getProductImage(product.slug) || "/placeholder.svg"}
           alt={product.name}
           fill
           className="object-cover transition-transform duration-500 group-hover:scale-105"

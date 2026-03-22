@@ -45,6 +45,12 @@ export function ShopContent() {
   const [dbProducts, setDbProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Sync state with URL search params
+  useEffect(() => {
+    const category = searchParams.get("category") || "all";
+    setSelectedCategory(category);
+  }, [searchParams]);
+
   const [dynamicCategories, setDynamicCategories] = useState<{name:string, value:string}[]>(categories);
   const [dynamicSkinTypes, setDynamicSkinTypes] = useState<{name:string, value:string}[]>(skinTypes);
   const [dynamicConcerns, setDynamicConcerns] = useState<{name:string, value:string}[]>(concerns);
@@ -94,7 +100,7 @@ export function ShopContent() {
     let filtered = [...dbProducts];
 
     if (selectedCategory && selectedCategory !== "all") {
-      filtered = filtered.filter((p) => p.category === selectedCategory);
+      filtered = filtered.filter((p) => p.category?.toLowerCase() === selectedCategory.toLowerCase());
     }
 
     if (selectedSkinType) {

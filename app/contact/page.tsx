@@ -44,10 +44,10 @@ export default function ContactPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
+
     // Simulate form submission
     await new Promise((resolve) => setTimeout(resolve, 1000));
-    
+
     setSubmitted(true);
     setIsSubmitting(false);
     setFormData({ name: "", email: "", phone: "", subject: "", message: "" });
@@ -168,7 +168,7 @@ export default function ContactPage() {
                   <h3 className="font-semibold text-lg text-foreground mb-4">Follow Us</h3>
                   <div className="flex gap-3">
                     <a
-                      href="https://instagram.com/cocoandco"
+                      href="https://www.instagram.com/cocoandco_organics?igsh=MXAxcHlpejdvbW9xNA=="
                       target="_blank"
                       rel="noopener noreferrer"
                       className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors"

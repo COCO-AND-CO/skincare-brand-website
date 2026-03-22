@@ -69,7 +69,7 @@ export function CategoryGrid() {
             <Link
               key={category.name}
               href={category.href}
-              className={`group relative p-6 md:p-8 rounded-2xl ${category.color} hover:shadow-lg transition-all duration-300 overflow-hidden`}
+              className={`group block relative p-6 md:p-8 rounded-2xl ${category.color} hover:shadow-lg transition-all duration-300 overflow-hidden cursor-pointer`}
             >
               <div className="relative z-10">
                 <h3 className={`font-serif text-xl md:text-2xl font-bold ${category.accent}`}>

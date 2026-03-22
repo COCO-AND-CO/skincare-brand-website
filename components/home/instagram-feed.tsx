@@ -19,7 +19,7 @@ export function InstagramFeed() {
             Follow Us
           </span>
           <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground mt-3 text-balance">
-            @cocoandco.naturals
+            @cocoandco_organics
           </h2>
           <p className="mt-4 text-muted-foreground text-lg">
             Join our community for skincare tips, behind-the-scenes, and exclusive offers
@@ -31,7 +31,7 @@ export function InstagramFeed() {
           {instagramPosts.map((post) => (
             <a
               key={post.id}
-              href="https://instagram.com/cocoandco"
+              href="https://www.instagram.com/cocoandco_organics?igsh=MXAxcHlpejdvbW9xNA=="
               target="_blank"
               rel="noopener noreferrer"
               className="group relative aspect-square rounded-xl overflow-hidden bg-muted"
@@ -52,7 +52,7 @@ export function InstagramFeed() {
         {/* Follow Button */}
         <div className="text-center mt-8">
           <a
-            href="https://instagram.com/cocoandco"
+            href="https://www.instagram.com/cocoandco_organics?igsh=MXAxcHlpejdvbW9xNA=="
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 text-primary font-semibold hover:underline underline-offset-4"

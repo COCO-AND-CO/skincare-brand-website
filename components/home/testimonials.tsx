@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import { Star, ChevronLeft, ChevronRight, Quote } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Star, ChevronLeft, ChevronRight, Quote, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { collection, getDocs, query, orderBy } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
-const testimonials = [
+const STATIC_TESTIMONIALS = [
   {
-    id: 1,
+    id: "1",
     name: "Priya Sharma",
     location: "Mumbai",
     rating: 5,
@@ -14,7 +16,7 @@ const testimonials = [
     product: "Kesar Chandan Soap",
   },
   {
-    id: 2,
+    id: "2",
     name: "Rahul Verma",
     location: "Delhi",
     rating: 5,
@@ -22,43 +24,61 @@ const testimonials = [
     product: "Coffee Revive Soap",
   },
   {
-    id: 3,
+    id: "3",
     name: "Ananya Patel",
     location: "Bangalore",
     rating: 5,
     text: "Finally found a soap that works for my sensitive skin! The Goat Milk soap is so gentle and moisturizing. No more irritation or dryness. Thank you COCO&CO!",
     product: "Goat Milk Glow Soap",
   },
-  {
-    id: 4,
-    name: "Vikram Singh",
-    location: "Jaipur",
-    rating: 5,
-    text: "The Herbal Hair soap has significantly reduced my dandruff. My hair feels cleaner and healthier. Great alternative to chemical shampoos!",
-    product: "Keshya Hair Soap",
-  },
-  {
-    id: 5,
-    name: "Meera Krishnan",
-    location: "Chennai",
-    rating: 5,
-    text: "Ordered the Neem Haldi soap for my teenage son's acne, and it's working wonders! The pimples have reduced significantly. Natural and effective!",
-    product: "Neem Sanctuary Soap",
-  },
 ];
 
 export function Testimonials() {
+  const [testimonials, setTestimonials] = useState<any[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchTestimonials() {
+      try {
+        const q = query(collection(db, "testimonials"), orderBy("createdAt", "desc"));
+        const querySnapshot = await getDocs(q);
+        const dynamicData = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        
+        // Use dynamic data if available, otherwise fallback to static
+        setTestimonials(dynamicData.length > 0 ? dynamicData : STATIC_TESTIMONIALS);
+      } catch (error) {
+        console.error("Error fetching testimonials:", error);
+        setTestimonials(STATIC_TESTIMONIALS);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchTestimonials();
+  }, []);
 
   const nextTestimonial = () => {
+    if (testimonials.length === 0) return;
     setCurrentIndex((prev) => (prev + 1) % testimonials.length);
   };
 
   const prevTestimonial = () => {
+    if (testimonials.length === 0) return;
     setCurrentIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length);
   };
 
   const current = testimonials[currentIndex];
+
+  if (loading) {
+    return (
+      <div className="py-24 bg-secondary flex justify-center items-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <section className="py-16 md:py-24 bg-secondary">

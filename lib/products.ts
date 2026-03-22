@@ -4,7 +4,8 @@ export interface Product {
   slug: string;
   price: number;
   originalPrice?: number;
-  image: string;
+  image?: string;
+  imageUrl?: string;
   category: string;
   skinType: string[];
   concern: string[];

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Product } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -12,19 +12,31 @@ export default function ProductsAdminPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function loadProducts() {
-      try {
-        const snapshot = await getDocs(collection(db, "products"));
-        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
-        setProducts(data);
-      } catch (e) {
-        console.error("Failed to load products: ", e);
-      }
-      setLoading(false);
+  async function loadProducts() {
+    try {
+      const snapshot = await getDocs(collection(db, "products"));
+      const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Product));
+      setProducts(data);
+    } catch (e) {
+      console.error("Failed to load products: ", e);
     }
+    setLoading(false);
+  }
+
+  useEffect(() => {
     loadProducts();
   }, []);
+
+  async function handleDelete(productId: string, productName: string) {
+    if (!confirm(`Are you sure you want to delete "${productName}"? This cannot be undone.`)) return;
+    try {
+      await deleteDoc(doc(db, "products", productId));
+      setProducts(prev => prev.filter(p => p.id !== productId));
+    } catch (e) {
+      console.error("Failed to delete product: ", e);
+      alert("Error deleting product. Please try again.");
+    }
+  }
 
   return (
     <div className="p-8 space-y-8">
@@ -62,9 +74,9 @@ export default function ProductsAdminPage() {
                 <tr key={product.id} className="bg-white border-b hover:bg-gray-50">
                   <td className="px-6 py-4">
                     {product.imageUrl ? (
-                      <img src={product.imageUrl} alt={product.name} className="w-12 h-12 object-cover rounded-md" />
+                      <img src={product.imageUrl} alt={product.name} className="w-12 h-12 object-cover rounded-md" onError={e => { (e.target as HTMLImageElement).src = "/placeholder.svg"; }} />
                     ) : (
-                      <div className="w-12 h-12 bg-gray-100 rounded-md" />
+                      <div className="w-12 h-12 bg-gray-100 rounded-md flex items-center justify-center text-gray-400 text-xs">No img</div>
                     )}
                   </td>
                   <td className="px-6 py-4 font-medium text-gray-900">{product.name}</td>
@@ -72,8 +84,19 @@ export default function ProductsAdminPage() {
                   <td className="px-6 py-4 capitalize">{product.category}</td>
                   <td className="px-6 py-4">{product.stock}</td>
                   <td className="px-6 py-4 text-right space-x-2">
-                    <Button variant="outline" size="icon" className="h-8 w-8"><Pencil className="h-4 w-4"/></Button>
-                    <Button variant="destructive" size="icon" className="h-8 w-8"><Trash2 className="h-4 w-4"/></Button>
+                    <Button variant="outline" size="icon" className="h-8 w-8" asChild>
+                      <Link href={`/admin/products/${product.id}/edit`}>
+                        <Pencil className="h-4 w-4"/>
+                      </Link>
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => handleDelete(product.id!, product.name)}
+                    >
+                      <Trash2 className="h-4 w-4"/>
+                    </Button>
                   </td>
                 </tr>
               ))

@@ -39,31 +39,33 @@ export function Header() {
                 <Menu className="h-6 w-6" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-[300px] bg-background">
-              <div className="flex flex-col gap-6 mt-6">
+            <SheetContent side="left" className="w-full sm:w-[350px] bg-background">
+              <div className="flex flex-col gap-10 mt-12 items-center text-center">
                 <Link href="/" className="flex items-center" onClick={() => setMobileMenuOpen(false)}>
-                  <span className="font-serif text-2xl font-bold text-primary">COCO&CO</span>
+                  <span className="font-serif text-3xl font-bold text-primary tracking-tight">
+                    COCO<span className="text-accent">&</span>CO
+                  </span>
                 </Link>
-                <nav className="flex flex-col gap-4">
+                <nav className="flex flex-col gap-6 w-full">
                   {navigation.map((item) => (
                     <Link
                       key={item.name}
                       href={item.href}
-                      className="text-lg font-medium text-foreground hover:text-primary transition-colors"
+                      className="text-xl font-medium text-foreground hover:text-primary transition-colors py-2 border-b border-border/10 last:border-0"
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       {item.name}
                     </Link>
                   ))}
                 </nav>
-                <div className="border-t border-border pt-4">
+                <div className="w-full border-t border-border pt-8 mt-4 flex justify-center">
                   <a
-                    href="https://wa.me/919876543210"
+                    href="https://wa.me/9053930058"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-primary font-medium"
+                    className="flex items-center gap-3 text-primary font-semibold text-lg hover:scale-105 transition-transform"
                   >
-                    <Phone className="h-4 w-4" />
+                    <Phone className="h-5 w-5" />
                     WhatsApp Us
                   </a>
                 </div>

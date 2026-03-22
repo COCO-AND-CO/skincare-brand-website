@@ -1,5 +1,6 @@
-'use client';
+"use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
@@ -12,127 +13,72 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { HelpCircle, MessageCircle, ArrowRight } from "lucide-react";
-const faqCategories = [
+import { HelpCircle, MessageCircle, ArrowRight, Loader2 } from "lucide-react";
+import { collection, getDocs, query, orderBy } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+
+const STATIC_FAQ_CATEGORIES = [
   {
     title: "About Our Products",
     faqs: [
       {
         question: "Are your soaps 100% chemical-free?",
-        answer:
-          "Yes, all our soaps are made with 100% natural ingredients. We never use parabens, sulfates, synthetic fragrances, artificial colors, or any harsh chemicals. Every ingredient is sourced from nature and carefully selected for its skin benefits.",
-      },
-      {
-        question: "Are your soaps suitable for sensitive skin?",
-        answer:
-          "Absolutely! Our soaps are formulated to be gentle on all skin types, including sensitive skin. We especially recommend our Goat Milk Glow, Aloe Pure, and Lavender Calm soaps for sensitive skin. However, if you have specific skin conditions or allergies, we recommend doing a patch test first.",
-      },
-      {
-        question: "What is the shelf life of your soaps?",
-        answer:
-          "Our soaps have a shelf life of 10-12 months from the manufacturing date when stored properly. Milk-based soaps (Cow Milk, Goat Milk) have a slightly shorter shelf life of 10 months. The exact shelf life is mentioned on each product page and packaging.",
-      },
-      {
-        question: "How should I store my soap?",
-        answer:
-          "Store your soap in a cool, dry place away from direct sunlight. Use a soap dish with proper drainage to let the soap dry between uses. This helps extend the life of your soap and prevents it from becoming mushy.",
-      },
-      {
-        question: "Are your products tested on animals?",
-        answer:
-          "No, we are proudly cruelty-free. We never test our products on animals. Our soaps are made with love for both your skin and our furry friends.",
-      },
-      {
-        question: "Can I use your soaps on my face?",
-        answer:
-          "Yes, most of our soaps are gentle enough for facial use. For face-specific care, we recommend our Rose Reverie, Kesar Chandan, and Aloe Pure soaps. The Charcoal (Pur Noir) and Multani Mitti soaps are great for oily and acne-prone facial skin.",
-      },
-    ],
-  },
-  {
-    title: "Ordering & Shipping",
-    faqs: [
-      {
-        question: "What is the shipping timeline?",
-        answer:
-          "We typically dispatch orders within 1-2 business days. Delivery takes 3-5 business days for metro cities and 5-7 business days for other locations. You will receive tracking information once your order is shipped.",
-      },
-      {
-        question: "Do you offer free shipping?",
-        answer:
-          "Yes! We offer free shipping on all orders above Rs. 499. For orders below Rs. 499, a flat shipping fee of Rs. 49 is applicable.",
-      },
-      {
-        question: "Is Cash on Delivery (COD) available?",
-        answer:
-          "Yes, we offer COD across India. A nominal COD fee of Rs. 40 is applicable on COD orders. Prepaid orders get priority dispatch and free shipping on orders above Rs. 499.",
-      },
-      {
-        question: "Do you ship internationally?",
-        answer:
-          "Currently, we ship only within India. We're working on expanding our shipping to international locations. Stay tuned to our newsletter for updates!",
-      },
-      {
-        question: "Can I track my order?",
-        answer:
-          "Yes! Once your order is shipped, you'll receive a tracking link via SMS and email. You can also reach out to us on WhatsApp for order updates.",
-      },
-    ],
-  },
-  {
-    title: "Returns & Refunds",
-    faqs: [
-      {
-        question: "What is your return policy?",
-        answer:
-          "Due to the personal hygiene nature of our products, we don't accept returns on used soaps. However, if you receive a damaged or defective product, we'll replace it at no additional cost. Please contact us within 48 hours of delivery with photos of the damaged product.",
-      },
-      {
-        question: "How do I request a refund?",
-        answer:
-          "For damaged or defective products, contact us via WhatsApp or email with your order details and photos. Once verified, we'll process a replacement or refund within 5-7 business days. Refunds are credited to the original payment method.",
-      },
-      {
-        question: "What if I receive the wrong product?",
-        answer:
-          "If you receive the wrong product, please contact us immediately with your order details. We'll arrange for a return pickup and send you the correct product at no extra cost.",
-      },
-    ],
-  },
-  {
-    title: "Product Usage",
-    faqs: [
-      {
-        question: "How long does one soap last?",
-        answer:
-          "With regular use (daily bathing), one 100g soap typically lasts 3-4 weeks for an individual. If used with a loofah or soap saver bag, it may last even longer. Proper storage between uses also helps extend the life of your soap.",
-      },
-      {
-        question: "Can pregnant women use your soaps?",
-        answer:
-          "Most of our soaps are safe for pregnant women as they're made with natural ingredients. However, we recommend consulting with your healthcare provider before using any new skincare product during pregnancy. Avoid soaps with strong fragrances if you're sensitive during pregnancy.",
-      },
-      {
-        question: "Are your soaps safe for children?",
-        answer:
-          "Yes, our soaps are gentle and safe for children. For kids, we especially recommend our Milk Silk (Cow Milk) and Goat Milk Glow soaps as they're extra moisturizing and gentle. Always supervise young children during bath time.",
-      },
-      {
-        question: "Can I use the Hair Soap as a regular shampoo?",
-        answer:
-          "Yes, our Keshya (Herbal Hair Soap) is designed as a natural alternative to chemical shampoos. It cleanses the scalp, reduces dandruff, and promotes healthy hair. Use it 2-3 times a week for best results. Follow up with a natural conditioner if needed.",
+        answer: "Yes, all our soaps are made with 100% natural ingredients. We never use parabens, sulfates, synthetic fragrances, artificial colors, or any harsh chemicals.",
       },
     ],
   },
 ];
 
 export default function FAQPage() {
+  const [faqCategories, setFaqCategories] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchFaqs() {
+      try {
+        const q = query(collection(db, "faqs"), orderBy("order", "asc"), orderBy("createdAt", "desc"));
+        const querySnapshot = await getDocs(q);
+        const dynamicFaqs = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+
+        if (dynamicFaqs.length > 0) {
+          // Group by category
+          const categories = ["About Our Products", "Ordering & Shipping", "Returns & Refunds", "Product Usage"];
+          const grouped = categories.map(cat => ({
+            title: cat,
+            faqs: dynamicFaqs.filter((f: any) => f.category === cat)
+          })).filter(c => c.faqs.length > 0);
+          
+          setFaqCategories(grouped);
+        } else {
+          setFaqCategories(STATIC_FAQ_CATEGORIES);
+        }
+      } catch (error) {
+        console.error("Error fetching FAQs:", error);
+        setFaqCategories(STATIC_FAQ_CATEGORIES);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchFaqs();
+  }, []);
+
   const handleWhatsAppClick = () => {
     window.open(
       "https://wa.me/919876543210?text=Hi! I have a question that's not covered in the FAQ.",
       "_blank"
     );
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <CartProvider>
@@ -161,7 +107,7 @@ export default function FAQPage() {
                     {category.title}
                   </h2>
                   <Accordion type="single" collapsible className="space-y-2">
-                    {category.faqs.map((faq, faqIndex) => (
+                    {category.faqs.map((faq: any, faqIndex: number) => (
                       <AccordionItem
                         key={faqIndex}
                         value={`${categoryIndex}-${faqIndex}`}
