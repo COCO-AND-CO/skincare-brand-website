@@ -25,7 +25,8 @@ export default function NewProductPage() {
     skinType: "",
     concern: "",
     stock: "100",
-    imageUrl: ""
+    imageUrl: "",
+    bestSeller: false
   });
 
   useEffect(() => {
@@ -69,6 +70,7 @@ export default function NewProductPage() {
         concern: [formData.concern],
         stock: Number(formData.stock),
         imageUrl: formData.imageUrl,
+        bestSeller: formData.bestSeller,
         createdAt: serverTimestamp()
       });
       router.push("/admin/products");
@@ -101,6 +103,19 @@ export default function NewProductPage() {
           <div className="space-y-2">
             <Label htmlFor="stock">Available Stock</Label>
             <Input id="stock" type="number" required min="0" value={formData.stock} onChange={e => setFormData({...formData, stock: e.target.value})} />
+          </div>
+
+          <div className="space-y-2 flex flex-col justify-center pt-6">
+            <div className="flex items-center space-x-2">
+              <input 
+                type="checkbox" 
+                id="bestSeller" 
+                className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+                checked={formData.bestSeller}
+                onChange={e => setFormData({...formData, bestSeller: e.target.checked})}
+              />
+              <Label htmlFor="bestSeller" className="font-normal cursor-pointer">Mark as Best Seller</Label>
+            </div>
           </div>
           
           <div className="space-y-2">

@@ -1,13 +1,39 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { collection, query, where, limit, getDocs } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/product/product-card";
-import { getBestSellers } from "@/lib/products";
 
 export function BestSellers() {
-  const bestSellers = getBestSellers().slice(0, 4);
+  const [bestSellers, setBestSellers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchBestSellers() {
+      try {
+        const q = query(
+          collection(db, "products"),
+          where("bestSeller", "==", true),
+          limit(4)
+        );
+        const snapshot = await getDocs(q);
+        const products = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setBestSellers(products);
+      } catch (error) {
+        console.error("Error fetching best sellers:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchBestSellers();
+  }, []);
 
   return (
     <section className="py-16 md:py-24 bg-secondary">
@@ -34,11 +60,23 @@ export function BestSellers() {
         </div>
 
         {/* Products Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {bestSellers.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="h-80 bg-muted rounded-lg animate-pulse" />
+            ))}
+          </div>
+        ) : bestSellers.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {bestSellers.map((product) => (
+              <ProductCard key={product.id} product={product as any} />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12 text-muted-foreground col-span-full">
+            <p>More best sellers coming soon!</p>
+          </div>
+        )}
       </div>
     </section>
   );

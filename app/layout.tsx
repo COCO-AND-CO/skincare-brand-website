@@ -25,7 +25,8 @@ export const metadata: Metadata = {
     description: 'Discover 100% handmade natural soaps crafted with love and nature.',
     type: 'website',
   },
-    generator: 'v0.app'
+    generator: 'v0.app',
+    manifest: '/manifest.json'
 }
 
 export const viewport: Viewport = {

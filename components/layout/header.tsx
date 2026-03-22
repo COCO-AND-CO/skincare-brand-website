@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useCart } from "@/lib/cart-context";
 import { CartDrawer } from "@/components/cart/cart-drawer";
+import { PwaInstallButton } from "@/components/layout/pwa-install-button";
 
 const navigation = [
   { name: "Home", href: "/" },
@@ -94,10 +95,13 @@ export function Header() {
           </nav>
 
           {/* Actions */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
             <Button variant="ghost" size="icon" className="hidden md:flex" aria-label="Search">
               <Search className="h-5 w-5" />
             </Button>
+            
+            <PwaInstallButton />
+
             <Button
               variant="ghost"
               size="icon"

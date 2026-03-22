@@ -29,7 +29,8 @@ export default function EditProductPage() {
     skinType: "",
     concern: "",
     stock: "100",
-    imageUrl: ""
+    imageUrl: "",
+    bestSeller: false
   });
 
   useEffect(() => {
@@ -57,7 +58,8 @@ export default function EditProductPage() {
             skinType: Array.isArray(data.skinType) ? data.skinType[0] : (data.skinType || ""),
             concern: Array.isArray(data.concern) ? data.concern[0] : (data.concern || ""),
             stock: String(data.stock || "100"),
-            imageUrl: data.imageUrl || data.image || ""
+            imageUrl: data.imageUrl || data.image || "",
+            bestSeller: data.bestSeller || false
           });
         } else {
           alert("Product not found.");
@@ -85,6 +87,7 @@ export default function EditProductPage() {
         concern: [formData.concern],
         stock: Number(formData.stock),
         imageUrl: formData.imageUrl,
+        bestSeller: formData.bestSeller,
         updatedAt: serverTimestamp()
       });
       router.push("/admin/products");
@@ -127,6 +130,19 @@ export default function EditProductPage() {
             <Input id="stock" type="number" required min="0" value={formData.stock} onChange={e => setFormData({...formData, stock: e.target.value})} />
           </div>
           
+          <div className="space-y-2 flex flex-col justify-center pt-6">
+            <div className="flex items-center space-x-2">
+              <input 
+                type="checkbox" 
+                id="bestSeller" 
+                className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+                checked={formData.bestSeller}
+                onChange={e => setFormData({...formData, bestSeller: e.target.checked})}
+              />
+              <Label htmlFor="bestSeller" className="font-normal cursor-pointer">Mark as Best Seller</Label>
+            </div>
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="category">Category</Label>
             <select 
