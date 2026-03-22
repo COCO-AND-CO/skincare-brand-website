@@ -3,13 +3,13 @@
 import { useEffect, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { 
+import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line
 } from "recharts";
-import { 
-  IndianRupee, ShoppingCart, Users, Package, 
-  TrendingUp, Activity, ArrowUpRight 
+import {
+  IndianRupee, ShoppingCart, Users, Package,
+  TrendingUp, Activity, ArrowUpRight
 } from "lucide-react";
 import Link from "next/link";
 
@@ -66,11 +66,11 @@ export default function AdminDashboard() {
         for (let i = 6; i >= 0; i--) {
           const d = new Date();
           d.setDate(today.getDate() - i);
-          last7Days.push({ 
-             name: days[d.getDay()], 
-             dateStr: d.toDateString(), 
-             revenue: 0, 
-             orders: 0 
+          last7Days.push({
+            name: days[d.getDay()],
+            dateStr: d.toDateString(),
+            revenue: 0,
+            orders: 0
           });
         }
 
@@ -78,12 +78,12 @@ export default function AdminDashboard() {
           if (!order.createdAt) return;
           const orderDate = order.createdAt.toDate ? order.createdAt.toDate() : new Date(order.createdAt);
           const orderDateStr = orderDate.toDateString();
-          
+
           const targetDay = last7Days.find((d: any) => d.dateStr === orderDateStr);
           if (targetDay) {
             targetDay.orders += 1;
             if (order.status !== "Cancelled") {
-               targetDay.revenue += (order.totalAmount || 0);
+              targetDay.revenue += (order.totalAmount || 0);
             }
           }
         });
@@ -91,10 +91,10 @@ export default function AdminDashboard() {
         setChartData(last7Days);
 
         // Fetch Recent 5 Orders
-        const sortedOrders = allOrders.sort((a,b) => {
-           const timeA = a.createdAt?.seconds || 0;
-           const timeB = b.createdAt?.seconds || 0;
-           return timeB - timeA; // Descending
+        const sortedOrders = allOrders.sort((a, b) => {
+          const timeA = a.createdAt?.seconds || 0;
+          const timeB = b.createdAt?.seconds || 0;
+          return timeB - timeA; // Descending
         }).slice(0, 5);
         setRecentOrders(sortedOrders);
 
@@ -133,7 +133,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-8 min-h-screen">
-      
+
       {/* Header */}
       <div className="flex justify-between items-end">
         <div>
@@ -151,30 +151,30 @@ export default function AdminDashboard() {
 
       {/* 4 Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard 
-          title="Total Revenue" 
-          value={`₹${stats.revenue.toLocaleString()}`} 
-          icon={IndianRupee} 
+        <StatCard
+          title="Total Revenue"
+          value={`₹${stats.revenue.toLocaleString()}`}
+          icon={IndianRupee}
           subtext="From active/completed orders"
           trend="+12.5%"
         />
-        <StatCard 
-          title="Active Orders" 
-          value={stats.orders} 
-          icon={ShoppingCart} 
+        <StatCard
+          title="Active Orders"
+          value={stats.orders}
+          icon={ShoppingCart}
           subtext="Pending or shipped"
           trend="+4.2%"
         />
-        <StatCard 
-          title="Total Users" 
-          value={stats.users} 
-          icon={Users} 
+        <StatCard
+          title="Total Users"
+          value={stats.users}
+          icon={Users}
           subtext="Registered accounts"
         />
-        <StatCard 
-          title="Total Products" 
-          value={stats.products} 
-          icon={Package} 
+        <StatCard
+          title="Total Products"
+          value={stats.products}
+          icon={Package}
           subtext="Live in catalog"
         />
       </div>
@@ -192,14 +192,14 @@ export default function AdminDashboard() {
               <BarChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 13, fontWeight: 500 }} dy={10} />
-                <YAxis 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{ fill: '#64748b', fontSize: 13, fontWeight: 500 }} 
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: '#64748b', fontSize: 13, fontWeight: 500 }}
                   tickFormatter={(val) => `₹${val}`}
                 />
-                <Tooltip 
-                  cursor={{fill: '#f8fafc'}}
+                <Tooltip
+                  cursor={{ fill: '#f8fafc' }}
                   contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontWeight: 600 }}
                 />
                 <Bar dataKey="revenue" fill="#0f172a" radius={[6, 6, 0, 0]} barSize={40} />
@@ -220,7 +220,7 @@ export default function AdminDashboard() {
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 13, fontWeight: 500 }} dy={10} />
                 <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 13, fontWeight: 500 }} />
-                <Tooltip 
+                <Tooltip
                   contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                   itemStyle={{ fontWeight: 600 }}
                 />
@@ -262,12 +262,11 @@ export default function AdminDashboard() {
                     <td className="px-6 py-5 text-gray-600 font-medium">{order.userName || order.userEmail || "Guest Checkout"}</td>
                     <td className="px-6 py-5 font-extrabold text-slate-900">₹{(order.totalAmount || 0).toLocaleString()}</td>
                     <td className="px-6 py-5">
-                      <span className={`px-3 py-1.5 rounded-full text-xs font-bold tracking-wide ${
-                        order.status === 'Delivered' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' :
-                        order.status === 'Shipped' ? 'bg-blue-100 text-blue-800 border border-blue-200' :
-                        order.status === 'Cancelled' ? 'bg-red-100 text-red-800 border border-red-200' :
-                        'bg-amber-100 text-amber-800 border border-amber-200'
-                      }`}>
+                      <span className={`px-3 py-1.5 rounded-full text-xs font-bold tracking-wide ${order.status === 'Delivered' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' :
+                          order.status === 'Shipped' ? 'bg-blue-100 text-blue-800 border border-blue-200' :
+                            order.status === 'Cancelled' ? 'bg-red-100 text-red-800 border border-red-200' :
+                              'bg-amber-100 text-amber-800 border border-amber-200'
+                        }`}>
                         {order.status || "Pending"}
                       </span>
                     </td>
