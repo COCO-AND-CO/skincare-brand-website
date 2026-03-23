@@ -5,7 +5,7 @@ import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  LineChart, Line
+  LineChart, Line, AreaChart, Area, PieChart, Pie, Cell, Legend
 } from "recharts";
 import {
   IndianRupee, ShoppingCart, Users, Package,
@@ -26,6 +26,8 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [recentOrders, setRecentOrders] = useState<any[]>([]);
   const [chartData, setChartData] = useState<any[]>([]);
+  const [orderStatusData, setOrderStatusData] = useState<any[]>([]);
+  const [topProductsData, setTopProductsData] = useState<any[]>([]);
 
   useEffect(() => {
     async function fetchDashboardData() {
@@ -70,7 +72,9 @@ export default function AdminDashboard() {
             name: days[d.getDay()],
             dateStr: d.toDateString(),
             revenue: 0,
-            orders: 0
+            orders: 0,
+            users: 0,
+            aov: 0
           });
         }
 
@@ -88,7 +92,69 @@ export default function AdminDashboard() {
           }
         });
 
+        // Calc AOV and users
+        last7Days.forEach((day: any) => {
+          day.aov = day.orders > 0 ? Math.round(day.revenue / day.orders) : 0;
+        });
+
+        usersSnap.docs.forEach((doc) => {
+          const data = doc.data();
+          if (data.createdAt) {
+            const date = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt);
+            const dateStr = date.toDateString();
+            const targetDay = last7Days.find((d: any) => d.dateStr === dateStr);
+            if (targetDay) {
+              targetDay.users += 1;
+            }
+          }
+        });
+
         setChartData(last7Days);
+
+        // Order Status
+        let statusMap: Record<string, number> = {
+          "Pending": 0,
+          "Shipped": 0,
+          "Delivered": 0,
+          "Cancelled": 0
+        };
+        allOrders.forEach((order: any) => {
+          const status = order.status || "Pending";
+          if (statusMap[status] !== undefined) {
+            statusMap[status] += 1;
+          } else {
+            statusMap[status] = 1;
+          }
+        });
+        const statusColors: any = {
+          "Pending": "#f59e0b",
+          "Shipped": "#3b82f6",
+          "Delivered": "#10b981",
+          "Cancelled": "#ef4444"
+        };
+        const statusData = Object.keys(statusMap).filter(k => statusMap[k] > 0).map((key) => {
+          return { name: key, value: statusMap[key], color: statusColors[key] || "#94a3b8" };
+        });
+        setOrderStatusData(statusData.length > 0 ? statusData : [{ name: "No Orders", value: 1, color: "#e2e8f0" }]);
+
+        // Top Products
+        let productSales: Record<string, number> = {};
+        allOrders.forEach((order: any) => {
+          const items = order.items || order.cartItems || [];
+          if (Array.isArray(items)) {
+            items.forEach((item: any) => {
+              const name = item.name || item.productName || item.title || "Unknown";
+              const qty = item.quantity || item.qty || 1;
+              productSales[name] = (productSales[name] || 0) + qty;
+            });
+          }
+        });
+        const topProducts = Object.keys(productSales)
+          .map(name => ({ name: name.length > 15 ? name.substring(0, 15) + '...' : name, fullName: name, sales: productSales[name] }))
+          .sort((a, b) => b.sales - a.sales)
+          .slice(0, 5);
+        setTopProductsData(topProducts.length > 0 ? topProducts : [{ name: "No Data", sales: 0 }]);
+
 
         // Fetch Recent 5 Orders
         const sortedOrders = allOrders.sort((a, b) => {
@@ -108,14 +174,14 @@ export default function AdminDashboard() {
 
   if (loading) return <div className="p-8 animate-pulse text-muted-foreground font-medium flex gap-2"><Activity className="animate-spin" /> Loading analytics...</div>;
 
-  const StatCard = ({ title, value, icon: Icon, subtext, trend }: any) => (
-    <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] flex flex-col justify-between transition-all hover:shadow-md">
+  const StatCard = ({ title, value, icon: Icon, subtext, trend, href }: any) => (
+    <Link href={href || "#"} className="bg-white p-6 rounded-xl border border-gray-100 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] flex flex-col justify-between transition-all hover:shadow-lg hover:-translate-y-1 block cursor-pointer">
       <div className="flex justify-between items-start">
         <div>
           <p className="text-sm font-medium text-gray-500">{title}</p>
           <h3 className="text-3xl font-bold mt-2 tracking-tight text-gray-900">{value}</h3>
         </div>
-        <div className="p-3 bg-slate-900 rounded-xl shadow-inner">
+        <div className="p-3 bg-slate-900 rounded-xl shadow-inner transition-transform group-hover:scale-110">
           <Icon className="h-5 w-5 text-white" />
         </div>
       </div>
@@ -128,12 +194,12 @@ export default function AdminDashboard() {
         )}
         <span className="text-gray-500">{subtext}</span>
       </div>
-    </div>
+    </Link>
   );
 
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-8 min-h-screen">
-
+      
       {/* Header */}
       <div className="flex justify-between items-end">
         <div>
@@ -152,6 +218,7 @@ export default function AdminDashboard() {
       {/* 4 Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
+          href="#revenue"
           title="Total Revenue"
           value={`₹${stats.revenue.toLocaleString()}`}
           icon={IndianRupee}
@@ -159,6 +226,7 @@ export default function AdminDashboard() {
           trend="+12.5%"
         />
         <StatCard
+          href="/admin/orders"
           title="Active Orders"
           value={stats.orders}
           icon={ShoppingCart}
@@ -166,12 +234,14 @@ export default function AdminDashboard() {
           trend="+4.2%"
         />
         <StatCard
+          href="/admin/users"
           title="Total Users"
           value={stats.users}
           icon={Users}
           subtext="Registered accounts"
         />
         <StatCard
+          href="/admin/products"
           title="Total Products"
           value={stats.products}
           icon={Package}
@@ -179,9 +249,10 @@ export default function AdminDashboard() {
         />
       </div>
 
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Bar Chart */}
+      {/* ── CHARTS SECTION ── */}
+      <div id="revenue" className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-4">
+        
+        {/* 1. Main Bar Chart (Revenue) */}
         <div className="lg:col-span-2 bg-white border border-gray-100 p-6 rounded-2xl shadow-sm">
           <div className="mb-6">
             <h2 className="text-xl font-bold text-gray-900">Revenue (Last 7 Days)</h2>
@@ -208,7 +279,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Secondary Line Chart */}
+        {/* 2. Secondary Line Chart (Order Volume) */}
         <div className="bg-white border border-gray-100 p-6 rounded-2xl shadow-sm">
           <div className="mb-6">
             <h2 className="text-xl font-bold text-gray-900">Order Volume</h2>
@@ -229,10 +300,133 @@ export default function AdminDashboard() {
             </ResponsiveContainer>
           </div>
         </div>
+
+        {/* 3. Average Order Value (AreaChart) */}
+        <div className="lg:col-span-2 bg-white border border-gray-100 p-6 rounded-2xl shadow-sm">
+          <div className="mb-6 flex justify-between items-center">
+            <div>
+              <h2 className="text-xl font-bold text-gray-900">Average Order Value (AOV)</h2>
+              <p className="text-sm text-gray-500">Cart size trends over the last 7 days</p>
+            </div>
+          </div>
+          <div className="h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                <defs>
+                  <linearGradient id="colorAov" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 13, fontWeight: 500 }} dy={10} />
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: '#64748b', fontSize: 13, fontWeight: 500 }}
+                  tickFormatter={(val) => `₹${val}`}
+                />
+                <Tooltip
+                  contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontWeight: 600 }}
+                />
+                <Area type="monotone" dataKey="aov" stroke="#8b5cf6" strokeWidth={3} fillOpacity={1} fill="url(#colorAov)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* 4. Order Status Distribution (PieChart) */}
+        <div className="bg-white border border-gray-100 p-6 rounded-2xl shadow-sm flex flex-col">
+          <div className="mb-2">
+            <h2 className="text-xl font-bold text-gray-900">Order Status</h2>
+            <p className="text-sm text-gray-500">Current state of all orders</p>
+          </div>
+          <div className="h-[300px] w-full flex-1">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={orderStatusData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={70}
+                  outerRadius={100}
+                  paddingAngle={5}
+                  dataKey="value"
+                  stroke="none"
+                >
+                  {orderStatusData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontWeight: 600 }}
+                  itemStyle={{ color: '#1e293b' }}
+                />
+                <Legend verticalAlign="bottom" height={36} iconType="circle" />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* 5. Top Selling Products (Horizontal Bar Chart) */}
+        <div className="bg-white border border-gray-100 p-6 rounded-2xl shadow-sm">
+          <div className="mb-6">
+            <h2 className="text-xl font-bold text-gray-900">Top Products</h2>
+            <p className="text-sm text-gray-500">Best selling items by quantity</p>
+          </div>
+          <div className="h-[300px] w-full pt-4">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart layout="vertical" data={topProductsData} margin={{ top: 5, right: 30, left: 10, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
+                <XAxis type="number" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 13 }} />
+                <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fill: '#475569', fontSize: 12, fontWeight: 500 }} width={90} />
+                <Tooltip
+                  cursor={{ fill: '#f8fafc' }}
+                  contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontWeight: 600 }}
+                />
+                <Bar dataKey="sales" fill="#f43f5e" radius={[0, 4, 4, 0]} barSize={20}>
+                  {topProductsData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={["#f43f5e", "#ec4899", "#d946ef", "#a855f7", "#8b5cf6"][index % 5]} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* 6. User Signups (AreaChart) */}
+        <div className="lg:col-span-2 bg-white border border-gray-100 p-6 rounded-2xl shadow-sm">
+          <div className="mb-6 flex justify-between items-center">
+            <div>
+              <h2 className="text-xl font-bold text-gray-900">User Growth</h2>
+              <p className="text-sm text-gray-500">New registered customers over 7 days</p>
+            </div>
+            <Users className="text-emerald-500 opacity-20 h-10 w-10" />
+          </div>
+          <div className="h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: -20 }}>
+                <defs>
+                  <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 13, fontWeight: 500 }} dy={10} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 13, fontWeight: 500 }} />
+                <Tooltip
+                  contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontWeight: 600 }}
+                />
+                <Area type="monotone" dataKey="users" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorUsers)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
       </div>
 
       {/* Recent Activity Table */}
-      <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+      <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden mt-8">
         <div className="p-6 border-b flex justify-between items-center bg-gray-50/50">
           <div>
             <h2 className="text-xl font-bold text-gray-900">Recent Transactions</h2>

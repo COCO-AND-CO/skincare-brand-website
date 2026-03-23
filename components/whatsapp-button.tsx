@@ -1,11 +1,31 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { MessageCircle } from "lucide-react";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 export function WhatsAppButton() {
+  const [whatsapp, setWhatsapp] = useState("919876543210");
+
+  useEffect(() => {
+    async function fetchContactSettings() {
+      try {
+        const docRef = doc(db, "settings", "contact");
+        const snap = await getDoc(docRef);
+        if (snap.exists() && snap.data().whatsapp) {
+          setWhatsapp(snap.data().whatsapp);
+        }
+      } catch (e) {
+        console.error("Failed to fetch whatsapp number");
+      }
+    }
+    fetchContactSettings();
+  }, []);
+
   const handleClick = () => {
     window.open(
-      "https://wa.me/919876543210?text=Hi! I'm interested in your natural soaps. Can you help me?",
+      `https://wa.me/${whatsapp}?text=Hi! I'm interested in your natural soaps. Can you help me?`,
       "_blank"
     );
   };

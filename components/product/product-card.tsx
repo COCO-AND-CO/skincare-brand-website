@@ -30,7 +30,7 @@ export function ProductCard({ product, featured = false }: ProductCardProps) {
       </div>
 
       {/* Image */}
-      <Link href={`/shop/${(product as any).id || product.slug}`} className="block relative aspect-square overflow-hidden bg-muted">
+      <Link href={`/product/${(product as any).id || product.slug}`} className="block relative aspect-square overflow-hidden bg-muted">
         <Image
           src={(product as any).imageUrl || product.image || getProductImage(product.slug) || "/placeholder.svg"}
           alt={product.name}
@@ -43,7 +43,7 @@ export function ProductCard({ product, featured = false }: ProductCardProps) {
 
       {/* Content */}
       <div className="p-4">
-        <Link href={`/shop/${(product as any).id || product.slug}`}>
+        <Link href={`/product/${(product as any).id || product.slug}`}>
           <h3 className="font-serif text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
             {product.name}
           </h3>

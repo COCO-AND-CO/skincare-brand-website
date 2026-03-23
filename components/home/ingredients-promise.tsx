@@ -1,21 +1,17 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
+import { useEffect, useState } from "react";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 const ingredients = [
-  "Coconut Oil",
-  "Glycerin",
-  "Essential Oils",
-  "Aloe Vera",
-  "Honey",
-  "Rose Petals",
-  "Activated Charcoal",
-  "Goat Milk",
-  "Turmeric",
-  "Sandalwood",
-  "Coffee",
-  "Neem",
+  "Coconut Oil", "Glycerin", "Essential Oils", "Aloe Vera",
+  "Honey", "Rose Petals", "Activated Charcoal", "Goat Milk",
+  "Turmeric", "Sandalwood", "Coffee", "Neem",
 ];
 
 const promises = [
@@ -25,7 +21,34 @@ const promises = [
   "100% biodegradable",
 ];
 
+const DEFAULTS = {
+  image1: "/images/products-grid-1.jpg",
+  image2: "/images/products-grid-2.png",
+  image3: "/images/keshya-hair-soap.png",
+};
+
 export function IngredientsPromise() {
+  const [images, setImages] = useState(DEFAULTS);
+
+  useEffect(() => {
+    async function fetchImages() {
+      try {
+        const snap = await getDoc(doc(db, "settings", "homepage"));
+        if (snap.exists()) {
+          const data = snap.data();
+          setImages({
+            image1: data.ingredientsImage1 || DEFAULTS.image1,
+            image2: data.ingredientsImage2 || DEFAULTS.image2,
+            image3: data.ingredientsImage3 || DEFAULTS.image3,
+          });
+        }
+      } catch (e) {
+        // silently fall back to defaults
+      }
+    }
+    fetchImages();
+  }, []);
+
   return (
     <section className="py-16 md:py-24 overflow-hidden">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -81,7 +104,7 @@ export function IngredientsPromise() {
               <div className="space-y-4">
                 <div className="aspect-square rounded-2xl overflow-hidden bg-muted">
                   <Image
-                    src="/images/products-grid-1.jpg"
+                    src={images.image1}
                     alt="Natural ingredients"
                     width={300}
                     height={300}
@@ -90,7 +113,7 @@ export function IngredientsPromise() {
                 </div>
                 <div className="aspect-[4/3] rounded-2xl overflow-hidden bg-muted">
                   <Image
-                    src="/images/products-grid-2.png"
+                    src={images.image2}
                     alt="Handmade soaps"
                     width={300}
                     height={225}
@@ -101,7 +124,7 @@ export function IngredientsPromise() {
               <div className="space-y-4 pt-8">
                 <div className="aspect-[4/3] rounded-2xl overflow-hidden bg-muted">
                   <Image
-                    src="/images/keshya-hair-soap.png"
+                    src={images.image3}
                     alt="Natural soap making"
                     width={300}
                     height={225}

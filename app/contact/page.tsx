@@ -1,9 +1,9 @@
 "use client";
 
-import React from "react"
-
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { doc, getDoc, collection, addDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { WhatsAppButton } from "@/components/whatsapp-button";
@@ -40,13 +40,53 @@ export default function ContactPage() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [settings, setSettings] = useState({
+    phone: "+91 98765 43210",
+    whatsapp: "919876543210",
+    email: "hello@cocoandco.in",
+    address: "123 Natural Lane,\nMumbai, Maharashtra 400001,\nIndia",
+    businessHours: "Mon - Sat: 10:00 AM - 7:00 PM\nSunday: Closed",
+    instagram: "https://www.instagram.com/cocoandco_organics?igsh=MXAxcHlpejdvbW9xNA==",
+    facebook: "https://facebook.com/cocoandco"
+  });
+
+  useEffect(() => {
+    async function fetchSettings() {
+      try {
+        const docRef = doc(db, "settings", "contact");
+        const snap = await getDoc(docRef);
+        if (snap.exists()) {
+          const data = snap.data();
+          setSettings(prev => ({
+            phone: data.phone || prev.phone,
+            whatsapp: data.whatsapp || prev.whatsapp,
+            email: data.email || prev.email,
+            address: data.address || prev.address,
+            businessHours: data.businessHours || prev.businessHours,
+            instagram: data.instagram || prev.instagram,
+            facebook: data.facebook || prev.facebook
+          }));
+        }
+      } catch (e) {
+        console.error("Failed to fetch contact settings");
+      }
+    }
+    fetchSettings();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Simulate form submission
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      await addDoc(collection(db, "messages"), {
+        ...formData,
+        createdAt: new Date(),
+        status: "Unread"
+      });
+    } catch (error) {
+      console.error("Error submitting message:", error);
+    }
 
     setSubmitted(true);
     setIsSubmitting(false);
@@ -55,7 +95,7 @@ export default function ContactPage() {
 
   const handleWhatsAppClick = () => {
     window.open(
-      "https://wa.me/919876543210?text=Hi! I have a question about your natural soaps.",
+      `https://wa.me/${settings.whatsapp}?text=Hi! I have a question about your natural soaps.`,
       "_blank"
     );
   };
@@ -112,10 +152,10 @@ export default function ContactPage() {
                     <div>
                       <p className="font-medium text-foreground">Phone</p>
                       <a
-                        href="tel:+919876543210"
+                        href={`tel:${settings.phone.replace(/[^0-9+]/g, '')}`}
                         className="text-muted-foreground hover:text-primary transition-colors"
                       >
-                        +91 98765 43210
+                        {settings.phone}
                       </a>
                     </div>
                   </div>
@@ -127,10 +167,10 @@ export default function ContactPage() {
                     <div>
                       <p className="font-medium text-foreground">Email</p>
                       <a
-                        href="mailto:hello@cocoandco.in"
+                        href={`mailto:${settings.email}`}
                         className="text-muted-foreground hover:text-primary transition-colors"
                       >
-                        hello@cocoandco.in
+                        {settings.email}
                       </a>
                     </div>
                   </div>
@@ -141,10 +181,8 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <p className="font-medium text-foreground">Address</p>
-                      <p className="text-muted-foreground">
-                        123 Natural Lane,<br />
-                        Mumbai, Maharashtra 400001,<br />
-                        India
+                      <p className="text-muted-foreground whitespace-pre-line">
+                        {settings.address}
                       </p>
                     </div>
                   </div>
@@ -155,9 +193,8 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <p className="font-medium text-foreground">Business Hours</p>
-                      <p className="text-muted-foreground">
-                        Mon - Sat: 10:00 AM - 7:00 PM<br />
-                        Sunday: Closed
+                      <p className="text-muted-foreground whitespace-pre-line">
+                        {settings.businessHours}
                       </p>
                     </div>
                   </div>
@@ -168,7 +205,7 @@ export default function ContactPage() {
                   <h3 className="font-semibold text-lg text-foreground mb-4">Follow Us</h3>
                   <div className="flex gap-3">
                     <a
-                      href="https://www.instagram.com/cocoandco_organics?igsh=MXAxcHlpejdvbW9xNA=="
+                      href={settings.instagram || "https://www.instagram.com/cocoandco_organics"}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors"
@@ -176,7 +213,7 @@ export default function ContactPage() {
                       <Instagram className="h-5 w-5" />
                     </a>
                     <a
-                      href="https://facebook.com/cocoandco"
+                      href={settings.facebook || "https://facebook.com/cocoandco"}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors"
